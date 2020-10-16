@@ -65,7 +65,7 @@ namespace OmniSharp.Models.v1.Completion
         /// An edit which is applied to a document when selecting this completion. When an edit is provided the value of
         /// <see cref="InsertText"/> is ignored.
         /// </summary>
-        public LinePositionSpanTextChange? TextEdit { get; set; }
+        public LinePositionSpanTextChange TextEdit { get; set; } = null!;
 
         /// <summary>
         /// An optional set of characters that when pressed while this completion is active will accept it first and

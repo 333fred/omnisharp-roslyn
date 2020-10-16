@@ -19,6 +19,13 @@ namespace OmniSharp.Models.v1.Completion
         /// otherwise.
         /// </summary>
         public char? TriggerCharacter { get; set; }
+
+        /// <summary>
+        /// Controls whether the returned completion items expect a call back to /completion/afterInsert
+        /// to asynchronously compute the changes required for the inserted completion. If omitted,
+        /// false is assumed.
+        /// </summary>
+        public bool? UseAsyncCompletion { get; set; }
     }
 
     public enum CompletionTriggerKind
