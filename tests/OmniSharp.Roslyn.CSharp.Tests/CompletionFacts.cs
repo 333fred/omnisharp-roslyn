@@ -1106,7 +1106,7 @@ public class Derived : Base
             Assert.Null(item.AdditionalTextEdits);
 
             var afterInsert = await AfterInsertResponse(item, "derived.cs", derivedText, SharedOmniSharpTestHost);
-            Assert.Equal("using System;\n\npublic class Derived : Base\r\n{\r\n    public override Action GetAction(Action a)\n    {\n        return base.GetAction(a);\n    }", afterInsert.Change.NewText);
+            Assert.Equal(NormalizeNewlines("using System;\n\npublic class Derived : Base\r\n{\r\n    public override Action GetAction(Action a)\n    {\n        return base.GetAction(a);\n    }"), afterInsert.Change.NewText);
             Assert.Equal(1, afterInsert.Change.StartLine);
             Assert.Equal(0, afterInsert.Change.StartColumn);
             Assert.Equal(3, afterInsert.Change.EndLine);
@@ -1411,7 +1411,7 @@ public partial class C
             Assert.Equal("M", item.TextEdit.NewText);
 
             var afterInsert = await AfterInsertResponse(item, "derived.cs", file2, SharedOmniSharpTestHost);
-            Assert.Equal("using System;\n\npublic partial class C\r\n{\r\n    partial void M(Action a)\n    {\n        throw new NotImplementedException();\n    }", afterInsert.Change.NewText);
+            Assert.Equal(NormalizeNewlines("using System;\n\npublic partial class C\r\n{\r\n    partial void M(Action a)\n    {\n        throw new NotImplementedException();\n    }"), afterInsert.Change.NewText);
             Assert.Equal(1, afterInsert.Change.StartLine);
             Assert.Equal(0, afterInsert.Change.StartColumn);
             Assert.Equal(3, afterInsert.Change.EndLine);

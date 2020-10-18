@@ -115,7 +115,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 bool wasUnimported;
                 if (useAsyncCompletion && !s_forceEagerResolveProviders.Contains(providerName))
                 {
-                    (finalCompletion, wasUnimported) = BuildCompletionListForAsync(
+                    (finalCompletion, wasUnimported) = BuildCompletionForAsync(
                         completions,
                         completion,
                         i,
@@ -156,7 +156,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             return (finalCompletionList, sawUnimportedItems);
         }
 
-        private static (CompletionItem, bool SawUnimportedItems) BuildCompletionListForAsync(
+        private static (CompletionItem, bool SawUnimportedItems) BuildCompletionForAsync(
             CSharpCompletionList completions,
             CSharpCompletionItem completion,
             int index,
@@ -165,7 +165,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             ImmutableArray<string> filteredItems,
             bool expectingImportedItems)
         {
-            var (seenUnimportedCompletions, sortTextPrepend) = completion.GetProviderName() switch
+            var (sawUnimportedCompletions, sortTextPrepend) = completion.GetProviderName() switch
             {
                 CompletionItemExtensions.ExtensionMethodImportCompletionProvider => (true, "1"),
                 CompletionItemExtensions.TypeImportCompletionProvider => (true, "1"),
@@ -198,7 +198,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 Data = index,
                 Preselect = completion.Rules.MatchPriority == MatchPriority.Preselect || filteredItems.Contains(completion.DisplayText),
                 CommitCharacters = commitCharacters,
-            }, seenUnimportedCompletions);
+            }, sawUnimportedCompletions);
         }
 
         private static async ValueTask<(CompletionItem, bool WasUnimported)> BuildCompletionForSync(
