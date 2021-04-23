@@ -74,6 +74,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
             CancellationToken cancellationToken = default)
             => (Task<CompletionChange>)_getChangeAsync.Invoke(completionService, new object[] { document, item, completionListSpan, commitCharacter, disallowAddingImports, cancellationToken });
 
+        [Obsolete("Should not be used by completion")]
         public static async Task<IEnumerable<ISymbol>> GetCompletionSymbolsAsync(this CompletionItem completionItem, IEnumerable<ISymbol> recommendedSymbols, Document document)
         {
             var properties = completionItem.Properties;
@@ -92,9 +93,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Intellisense
                 && properties.TryGetValue(SymbolKind, out string symbolKindValue)
                 && int.Parse(symbolKindValue) is int symbolKindInt)
             {
+#pragma warning disable RS1024 // This is deprecated, not going to change the behavior now.
                 return recommendedSymbols
                     .Where(x => (int)x.Kind == symbolKindInt && x.Name.Equals(symbolNameValue, StringComparison.OrdinalIgnoreCase))
                     .Distinct();
+#pragma warning restore RS1024
             }
 
             return Enumerable.Empty<ISymbol>();

@@ -942,6 +942,28 @@ class C
         [Theory]
         [InlineData("dummy.cs")]
         [InlineData("dummy.csx")]
+        public async Task OverrideSignatures_PartiallyTypedMethod_Sync(string filename)
+        {
+            const string source = @"
+class C
+{
+    override Eq$$
+}";
+
+            var completions = await FindCompletionsAsync(filename, source, SharedOmniSharpTestHost, useAsync: false);
+            Assert.Equal(new[] { "Equals(object obj)" },
+                         completions.Items.Select(c => c.Label));
+
+            Assert.Equal(new[] { "Equals(object obj)\n    {\n        return base.Equals(obj);$0\n    \\}" },
+                         completions.Items.Select(c => c.TextEdit.NewText));
+
+            Assert.All(completions.Items.Select(c => c.AdditionalTextEdits), a => Assert.Null(a));
+            Assert.All(completions.Items, c => Assert.Equal(InsertTextFormat.Snippet, c.InsertTextFormat));
+        }
+
+        [Theory]
+        [InlineData("dummy.cs")]
+        [InlineData("dummy.csx")]
         public async Task OverrideSignatures_ModifierAndReturnTypeInFront_Async(string filename)
         {
             const string source = @"

@@ -39,7 +39,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
         private readonly FormattingOptions _formattingOptions;
         private readonly ILogger _logger;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
         private (CSharpCompletionList Completions, string FileName, int position)? _lastCompletion = null;
 
         [ImportingConstructor]
@@ -71,8 +71,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var completionService = CSharpCompletionService.GetService(document);
             Debug.Assert(request.TriggerCharacter != null || request.CompletionTrigger != CompletionTriggerKind.TriggerCharacter);
 
+            var roslynTrigger = getCompletionTrigger();
             if (request.CompletionTrigger == CompletionTriggerKind.TriggerCharacter &&
-                !completionService.ShouldTriggerCompletion(sourceText, position, getCompletionTrigger(includeTriggerCharacter: true)))
+                !completionService.ShouldTriggerCompletion(sourceText, position, roslynTrigger))
             {
                 _logger.LogTrace("Should not insert completions here.");
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
@@ -81,9 +82,9 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
             var (completions, expandedItemsAvailable) = await completionService.GetCompletionsInternalAsync(
                 document,
                 position,
-                getCompletionTrigger(includeTriggerCharacter: false));
+                getCompletionTrigger());
             _logger.LogTrace("Found {0} completions for {1}:{2},{3}",
-                             completions?.Items.IsDefaultOrEmpty != true ? 0 : completions.Items.Length,
+                             completions?.Items.IsDefault != false ? 0 : completions.Items.Length,
                              request.FileName,
                              request.Line,
                              request.Column);
@@ -93,13 +94,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
             }
 
-            if (request.TriggerCharacter == ' ' && !completions.Items.Any(c =>
-            {
-                var providerName = c.GetProviderName();
-                return providerName == CompletionItemExtensions.OverrideCompletionProvider ||
-                       providerName == CompletionItemExtensions.PartialMethodCompletionProvider ||
-                       providerName == CompletionItemExtensions.ObjectCreationCompletionProvider;
-            }))
+            if (request.TriggerCharacter == ' ' &&
+                !completions.Items.Any(c =>
+                    c.GetProviderName() is CompletionItemExtensions.OverrideCompletionProvider or
+                       CompletionItemExtensions.PartialMethodCompletionProvider or
+                       CompletionItemExtensions.ObjectCreationCompletionProvider))
             {
                 // Only trigger on space if there is an object creation completion
                 return new CompletionResponse { Items = ImmutableArray<CompletionItem>.Empty };
@@ -124,8 +123,7 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 sourceText,
                 position,
                 expectingImportedItems,
-                request.UseAsyncCompletion ?? false,
-                _logger);
+                request.UseAsyncCompletion ?? false);
 
 
             _logger.LogTrace("Completions filled in");
@@ -136,13 +134,11 @@ namespace OmniSharp.Roslyn.CSharp.Services.Completion
                 Items = finalCompletionItems
             };
 
-            CompletionTrigger getCompletionTrigger(bool includeTriggerCharacter)
+            CompletionTrigger getCompletionTrigger()
                 => request.CompletionTrigger switch
                 {
                     CompletionTriggerKind.Invoked => CompletionTrigger.Invoke,
-                    // https://github.com/dotnet/roslyn/issues/42982: Passing a trigger character
-                    // to GetCompletionsAsync causes a null ref currently.
-                    CompletionTriggerKind.TriggerCharacter when includeTriggerCharacter => CompletionTrigger.CreateInsertionTrigger((char)request.TriggerCharacter!),
+                    CompletionTriggerKind.TriggerCharacter => CompletionTrigger.CreateInsertionTrigger((char)request.TriggerCharacter!),
                     _ => CompletionTrigger.Invoke,
                 };
         }
